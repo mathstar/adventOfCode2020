@@ -1,9 +1,12 @@
+mod day;
 mod day1;
 mod day2;
 
 use simple_logger::SimpleLogger;
 use std::fs;
 use std::io;
+use std::collections::HashMap;
+use crate::day::Day;
 
 fn main() {
     SimpleLogger::new().init().unwrap();
@@ -12,37 +15,21 @@ fn main() {
     let mut day = String::new();
     io::stdin().read_line(&mut day).expect("Failed to read line");
 
-    match day.trim() {
-        "1" => {
-            let input = read_input(1);
-            println!("{}", day1::part1(input.as_str()));
-            println!("{}", day1::part2(input.as_str()));
-        },
-        "1a" => {
-            let input = read_input(1);
-            println!("{}", day1::part1(input.as_str()));
-        },
-        "1b" => {
-            let input = read_input(1);
-            println!("{}", day1::part2(input.as_str()));
-        },
-        "2" => {
-            let input = read_input(2);
-            println!("{}", day2::part1(input.as_str()));
-            println!("{}", day2::part2(input.as_str()));
-        },
-        "2a" => {
-            let input = read_input(2);
-            println!("{}", day2::part1(input.as_str()));
-        },
-        "2b" => {
-            let input = read_input(2);
-            println!("{}", day2::part2(input.as_str()));
-        },
-        _ => println!("Unknown day")
+    let mut days:HashMap<&str, Box<dyn Day>> = HashMap::new();
+    days.insert("1", Box::new(day1::Day1{}));
+    days.insert("2", Box::new(day2::Day2{}));
+
+    let trimmed_day = day.trim();
+    match days.get(trimmed_day) {
+        Some(day) => {
+            let input = read_input(trimmed_day);
+            println!("{}", day.part1(input.as_str()));
+            println!("{}", day.part2(input.as_str()));
+        }
+        None => println!("Unknown day")
     }
 }
 
-fn read_input(day: u8) -> String {
+fn read_input(day: &str) -> String {
     fs::read_to_string(format!("res/day{}.txt", day)).expect("Error reading input")
 }

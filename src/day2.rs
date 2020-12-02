@@ -1,9 +1,15 @@
-pub fn part1(input: &str) -> String {
-    String::new()
-}
+use crate::day::Day;
 
-pub fn part2(input: &str) -> String {
-    String::new()
+pub struct Day2 {}
+
+impl Day for Day2 {
+    fn part1(&self, input: &str) -> String {
+        String::new()
+    }
+
+    fn part2(&self, input: &str) -> String {
+        String::new()
+    }
 }
 
 #[cfg(test)]
