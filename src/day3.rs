@@ -21,19 +21,7 @@ fn count_trees(map:&Vec<Vec<char>>, right:usize, down:usize) -> i64 {
 impl Day for Day3 {
     fn part1(&self, input: &str) -> String {
         let map = input.split_whitespace().map(|line| line.chars().collect::<Vec<char>>()).collect::<Vec<Vec<char>>>();
-        let mut x = 0;
-        let mut y = 0;
-        let mut count = 0;
-        while y < map.len() {
-            let row = map.get(y).unwrap();
-            log::debug!("{} {} {}", x, y, row.get(x % row.len()).unwrap());
-            if row.get(x % row.len()).unwrap() == &'#' {
-                count += 1;
-            }
-            x += 3;
-            y += 1;
-        }
-        count.to_string()
+        count_trees(&map, 3, 1).to_string()
     }
 
     fn part2(&self, input: &str) -> String {
