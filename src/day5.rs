@@ -3,23 +3,13 @@ use crate::day::Day;
 pub struct Day5 {}
 
 fn seat_id(input: &str) -> i32 {
-    let mut row_min = 0;
-    let mut row_max = 127;
-    let mut seat_min = 0;
-    let mut seat_max = 7;
-    for char in input.chars() {
-        match char {
-            'F' => row_max = row_max - (row_max - row_min) / 2 - 1,
-            'B' => row_min = ((row_max - row_min) / 2) + row_min + 1,
-            'L' => seat_max = seat_max - (seat_max - seat_min) / 2 - 1,
-            'R' => seat_min = ((seat_max - seat_min) / 2) + seat_min + 1,
-            _ => panic!("Invalid character in seat code")
-        }
-        //log::debug!("{} {} {} {} {}", char, row_min, row_max, seat_min, seat_max);
-    }
-    assert_eq!(row_min, row_max);
-    assert_eq!(seat_min, seat_max);
-    row_min * 8 + seat_min
+    input.chars().fold(0, |a, b| (a << 1) + match b {
+        'F' => 0,
+        'B' => 1,
+        'L' => 0,
+        'R' => 1,
+        _ => panic!("Invalid character in seat code")
+    })
 }
 
 impl Day for Day5 {
