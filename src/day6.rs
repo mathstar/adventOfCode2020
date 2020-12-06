@@ -36,10 +36,7 @@ impl Day for Day6 {
             } else {
                 group_size += 1;
                 for char in line.chars() {
-                    match present.get(&char) {
-                        Some(i) => present.insert(char, i+1),
-                        None => present.insert(char, 1)
-                    };
+                    present.entry(char).and_modify(|i| *i += 1).or_insert(1);
                 }
             }
         }
