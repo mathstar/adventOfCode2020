@@ -79,7 +79,7 @@ impl Day for Day8 {
                 Nop(n) => mutated[i] = Jmp(n)
             }
             match check_termination(&mutated) {
-                Some(i) => return i.to_string(),
+                Some(n) => return n.to_string(),
                 None => ()
             }
         }
