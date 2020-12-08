@@ -11,17 +11,19 @@ enum Instruction {
     Nop(i32)
 }
 
-fn apply_instruction(instruction: &Instruction, pc: &mut i32, acc: &mut i32) {
-    match instruction {
-        Acc(i) => {
-            *acc += i;
-            *pc += 1;
-        },
-        Jmp(i) => {
-            *pc += i;
-        }
-        Nop(_) => {
-            *pc += 1;
+impl Instruction {
+    fn apply(&self, pc: &mut i32, acc: &mut i32) {
+        match self {
+            Acc(i) => {
+                *acc += i;
+                *pc += 1;
+            },
+            Jmp(i) => {
+                *pc += i;
+            }
+            Nop(_) => {
+                *pc += 1;
+            }
         }
     }
 }
@@ -43,7 +45,7 @@ fn check_termination(instructions: &Vec<Instruction>) -> Option<i32> {
     while (pc as usize) < instructions.len() {
         let instruction = &(instructions[pc as usize]);
         if visited.insert(pc) {
-            apply_instruction(&instruction, &mut pc, &mut acc);
+            instruction.apply(&mut pc, &mut acc);
         } else {
             return None;
         }
@@ -61,7 +63,7 @@ impl Day for Day8 {
         loop {
             let instruction = &(instructions[pc as usize]);
             if visited.insert(pc) {
-                apply_instruction(&instruction, &mut pc, &mut acc);
+                instruction.apply(&mut pc, &mut acc);
             } else {
                 return acc.to_string();
             }
