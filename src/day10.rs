@@ -24,22 +24,25 @@ impl Day for Day10 {
         adapters.sort();
         adapters.push(adapters[adapters.len()-1] + 3);
         log::debug!("{:?}", adapters);
-        let mut skippable = 0;
-        let mut consecutive_unskippable = 0;
-        for i in 1..adapters.len()-1 {
-            let diff = adapters[i+1] - adapters[i-1];
-            if diff <= 3 {
-                skippable += 1;
-
-                if i >= 2 {
-                    if adapters[i-1] - adapters[i-2] <= 3 && adapters [i] - adapters[i-2] > 3 {
-                        consecutive_unskippable += 1;
-                    }
-                }
+        let mut combinations = 1u64;
+        let mut since_diff_3 = 0;
+        for i in 1..adapters.len() {
+            let diff = adapters[i] - adapters[i-1];
+            if diff == 3 {
+                combinations *= match since_diff_3 {
+                    4 => 7, // (3 choose 2) + (3 choose 1) + (3 choose 0)
+                    3 => 4,
+                    2 => 2,
+                    1 => 1,
+                    0 => 1,
+                    n => panic!(format!("unhandled case {}", n))
+                };
+                since_diff_3 = 0;
+            } else {
+                since_diff_3 += 1;
             }
         }
-        //log::debug!("{} {} {}", skippable, consecutive, twice_consecutive);
-        (2u64.pow(skippable) - consecutive_unskippable).to_string()
+        combinations.to_string()
     }
 }
 
