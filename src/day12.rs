@@ -152,11 +152,9 @@ impl Day for Day12 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use simple_logger::SimpleLogger;
 
     #[test]
     fn part1_test1() {
-        SimpleLogger::new().init().unwrap();
         assert_eq!(Day12{}.part1("F10
 N3
 F7
