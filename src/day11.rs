@@ -183,6 +183,7 @@ impl Day for Day11 {
     }
 }
 
+#[allow(unused_must_use)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -190,7 +191,7 @@ mod tests {
 
     #[test]
     fn part1_test1() {
-        SimpleLogger::new().init().unwrap();
+        SimpleLogger::new().init();
         assert_eq!(Day11{}.part1("L.LL.LL.LL
 LLLLLLL.LL
 L.L.L..L..

@@ -30,7 +30,7 @@ impl Day for Day13 {
             .split(",")
             .map(|b| b.parse())
             .enumerate()
-            .filter(|(i,b)| b.is_ok())
+            .filter(|(_,b)| b.is_ok())
             .map(|(i,b)| (i,b.unwrap()))
             .collect::<Vec<(usize,i64)>>();
 

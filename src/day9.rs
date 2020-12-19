@@ -58,6 +58,7 @@ impl Day for Day9 {
     }
 }
 
+#[allow(unused_must_use)]
 #[cfg(test)]
 mod tests {
     use super::*;

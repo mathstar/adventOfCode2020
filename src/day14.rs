@@ -60,7 +60,7 @@ fn apply_address_mask(mask:&Vec<Option<u8>>, address:u64) -> HashSet<u64> {
 
 impl Day for Day14 {
     fn part1(&self, input: &str) -> String {
-        let mut lines = input.lines();
+        let lines = input.lines();
         let mut on_mask = 0;
         let mut off_mask = 0;
 
@@ -79,7 +79,7 @@ impl Day for Day14 {
     }
 
     fn part2(&self, input: &str) -> String {
-        let mut lines = input.lines();
+        let lines = input.lines();
         let mut mask = Vec::new();
 
         let mut values = HashMap::new();
@@ -100,6 +100,7 @@ impl Day for Day14 {
     }
 }
 
+#[allow(unused_must_use)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -115,7 +116,7 @@ mem[8] = 0"), "165");
 
     #[test]
     fn part2_test1() {
-        SimpleLogger::new().init().unwrap();
+        SimpleLogger::new().init();
         assert_eq!(Day14{}.part2("mask = 000000000000000000000000000000X1001X
 mem[42] = 100
 mask = 00000000000000000000000000000000X0XX

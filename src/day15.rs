@@ -1,6 +1,5 @@
 use crate::day::Day;
 use std::collections::HashMap;
-use std::convert::TryInto;
 
 pub struct Day15 {}
 
@@ -51,6 +50,7 @@ impl Day for Day15 {
     }
 }
 
+#[allow(unused_must_use)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn part1_test1() {
-        SimpleLogger::new().init().unwrap();
+        SimpleLogger::new().init();
         assert_eq!(Day15{}.part1("0,3,6"), "436");
     }
 
