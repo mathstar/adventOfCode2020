@@ -1,7 +1,7 @@
 use crate::day::Day;
 use std::collections::VecDeque;
 use crate::day18::CalculationToken::*;
-use crate::day18::Process::Token;
+use crate::day18::CalculationToken::CloseParen;
 
 pub struct Day18 {}
 
@@ -65,137 +65,66 @@ fn calculate(tokens:&mut VecDeque<CalculationToken>) -> i64 {
     acc.pop().unwrap()
 }
 
-enum Tree {
-    Node(Box<Tree>, Box<Tree>, Op),
-    Leaf(i64)
-}
-
-enum Process {
-    Tree(Box<Tree>),
-    Token(CalculationToken)
-}
-
-// fn priority_addition_tree(tokens:&mut VecDeque<CalculationToken>) ->  {
-//     let mut process = Vec::new();
-//     while let Some(t) = tokens.pop_front() {
-//         process.push(match (t) {
-//             Num(n) => Process::Tree(Box::new(Tree::Leaf(n))),
-//             t => Process::Token(t)
-//         })
-//     }
-//
-//     while process.len() > 1 {
-//         let mut next_step = Vec::new();
-//         for i in 0..process.len() {
-//             match process[i] {
-//                 Token(Plus) => if let Some(Process::Tree(_)) = next_step.last() {
-//                     if let Process::Tree(_)
-//                 }
-//             }
-//         }
-//     }
-// }
-
-fn calculate_prioritize_addition(tokens:VecDeque<CalculationToken>) -> i64 {
-    let mut mutated = Some(Vec::from(tokens));
-    let mut post = Vec::new();
-    while let Some(tokens) = mutated {
-        mutated = None;
-        for i in 0..tokens.len() {
-            if let OpenParen = tokens[i] {
-                let mut inner_parens = 0;
-                let mut closed_paren_index = 0;
-                for j in i+1..tokens.len() {
-                    if let OpenParen = tokens[j] {
-                        inner_parens += 1;
-                    } else if let CloseParen = tokens[j] {
-                        if inner_parens > 0 {
-                            inner_parens -= 1;
-                        } else {
-                            closed_paren_index = j;
-                            break;
-                        }
-                    }
-                }
-                assert_ne!(closed_paren_index, 0);
-
-                let mut m = Vec::new();
-                if i > 0 {
-                    for i in 0..i - 1 { m.push(tokens[i]) }
-                }
-                let mut inside = VecDeque::new();
-                for i in i+1..closed_paren_index {inside.push_back(tokens[i])}
-                println!("in: {:?}", tokens);
-                println!("inner: {:?}", inside);
-                m.push(Num(calculate_prioritize_addition(inside)));
-                for i in closed_paren_index+1..tokens.len() {m.push(tokens[i])}
-                println!("out: {:?}", m);
-                mutated = Some(m);
+fn calculate_prioritize_addition(tokens:&mut VecDeque<CalculationToken>) -> i64 {
+    let mut without_parens = VecDeque::new();
+    let mut sub = None;
+    let mut paren_count = 0;
+    while let Some(t) = tokens.pop_front() {
+        match t {
+            OpenParen if matches!(sub, None) => {
+                paren_count += 1;
+                sub = Some(VecDeque::new());
             }
-        }
-        if let None = mutated {
-            post = tokens;
-        }
-    }
-
-    let mut mutated = Some(Vec::from(post));
-    while let Some(tokens) = mutated {
-        //println!("{:?}", tokens);
-        mutated = None;
-        for i in 0..tokens.len() {
-            if let Plus = tokens[i] {
-                if let Num(a) = tokens[i - 1] {
-                    if let Num(b) = tokens[i + 1] {
-                        let mut m = Vec::new();
-                        for i in 0..i - 1 { m.push(tokens[i]) }
-                        m.push(Num(a + b));
-                        for i in i + 2..tokens.len() { m.push(tokens[i]) }
-                        mutated = Some(m);
-                    }
-                }
+            CloseParen if paren_count == 1 => {
+                paren_count -= 1;
+                without_parens.push_back(Num(calculate_prioritize_addition(&mut sub.unwrap())));
+                sub = None;
             }
-        }
-        if let None = mutated {
-            for i in 0..tokens.len() {
-                if let Times = tokens[i] {
-                    if let Num(a) = tokens[i - 1] {
-                        if let Num(b) = tokens[i + 1] {
-                            let mut m = Vec::new();
-                            for i in 0..i - 1 { m.push(tokens[i]) }
-                            m.push(Num(a * b));
-                            for i in i + 2..tokens.len() { m.push(tokens[i]) }
-                            mutated = Some(m);
-                        }
-                    }
+            t => {
+                if let OpenParen = t {
+                    paren_count += 1;
+                } else if let CloseParen = t {
+                    paren_count -= 1;
                 }
-            }
-
-            if let None = mutated {
-                for i in 0..tokens.len() {
-                    if let OpenParen = tokens[i] {
-                        if let Num(a) = tokens[i+1] {
-                            if let CloseParen = tokens[i+2] {
-                                let mut m = Vec::new();
-                                for i in 0..i {m.push(tokens[i])}
-                                m.push(Num(a));
-                                for i in i+3..tokens.len() {m.push(tokens[i])}
-                                mutated = Some(m);
-                            }
-                        }
-                    }
-                }
-                if let None = mutated {
-                    if tokens.len() == 1 {
-                        if let Num(n) = tokens[0] {
-                            return n;
-                        }
-                    }
-                    panic!("Calculation failed");
+                match sub {
+                    Some(ref mut v) => v.push_back(t),
+                    None => without_parens.push_back(t)
                 }
             }
         }
     }
-    0
+
+    let mut without_add = VecDeque::new();
+    let mut op = None;
+    let mut num = 0;
+    while let Some(t) = without_parens.pop_front() {
+        match t {
+            Plus | Times => {op = Some(t)},
+            Num(n) => match op {
+                None => num = n,
+                Some(Plus) => num = num + n,
+                Some(Times) => {
+                    without_add.push_back(Num(num));
+                    without_add.push_back(Times);
+                    num = n;
+                }
+                _ => panic!("Unexpected parens")
+            },
+            _ => panic!("Unexpected parens")
+        }
+    }
+    without_add.push_back(Num(num));
+
+    let mut num = 1;
+    while let Some(t) = without_add.pop_front() {
+        match t {
+            Times => (),
+            Num(n) => num *= n,
+            _ => panic!("Unexpected add")
+        }
+    }
+
+    num
 }
 
 impl Day for Day18 {
@@ -204,7 +133,7 @@ impl Day for Day18 {
     }
 
     fn part2(&self, input: &str) -> String {
-        input.lines().map(|l| calculate_prioritize_addition(tokenize(l))).sum::<i64>().to_string()
+        input.lines().map(|l| calculate_prioritize_addition(&mut tokenize(l))).sum::<i64>().to_string()
     }
 }
 
