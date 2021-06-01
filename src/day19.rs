@@ -1,6 +1,5 @@
 use crate::day::Day;
 use crate::day19::Rule::*;
-use std::borrow::{BorrowMut, Borrow};
 use std::collections::{HashSet, HashMap};
 
 pub struct Day19 {}
@@ -22,7 +21,6 @@ fn parse_input(input: &str) -> (HashMap<usize, Rule>, Vec<&str>) {
     let raw_rules = split.next().unwrap();
     let mut rules = HashMap::new();
     for rule in raw_rules.lines() {
-        println!("{:?}", rule);
         let mut num_separator = rule.split(":");
         let rule_num = num_separator.next().unwrap().parse().unwrap();
         let rule_body = num_separator.next().unwrap().trim();
@@ -31,7 +29,7 @@ fn parse_input(input: &str) -> (HashMap<usize, Rule>, Vec<&str>) {
             continue;
         }
 
-        let mut raw_ors = rule_body.split("|");
+        let raw_ors = rule_body.split("|");
         let mut or_clauses = Vec::new();
         for raw_or in raw_ors {
             or_clauses.push(Concat(
@@ -52,91 +50,6 @@ fn parse_input(input: &str) -> (HashMap<usize, Rule>, Vec<&str>) {
     let raw_messages = split.next().unwrap();
 
     (rules, raw_messages.lines().collect())
-}
-
-fn simplify_rules(mut rules: Vec<Rule>) -> Vec<Rule> {
-    let mut changes_made = true;
-    while changes_made {
-        changes_made = false;
-
-        for i in 0..rules.len() {
-            let rule = &rules[i];
-            match simplify_rule(rule, &rules) {
-                Some(modified_rule) => {
-                    changes_made = true;
-                    rules[i] = modified_rule;
-                }
-                None => ()
-            }
-        }
-    }
-
-    rules
-}
-
-fn simplify_rule(rule: &Rule, rules: &Vec<Rule>) -> Option<Rule> {
-    match rule {
-        Reference(n) => Some(rules[*n].clone())/*match &rules[*n] {
-            Literal(s) => Some(Literal(s.to_string())),
-            _ => None
-        }*/,
-        Concat(sub) if sub.len() == 1 => match &*sub[0] {
-            Literal(s) => Some(Literal(s.to_string())),
-            Reference(n) => Some(Reference(*n)),
-            _ => None
-        }
-        Concat(sub) if sub.iter().all(|r| matches!(**r, Literal(_))) => {
-            let mut concat = "".to_string();
-            for sub_rule in sub {
-                match &**sub_rule {
-                    Literal(s) => concat += s.as_str(),
-                    _ => ()
-                }
-            }
-            Some(Literal(concat.to_string()))
-        }
-        Concat(sub) => {
-            let mut changed = false;
-            let mut modified_sub = Vec::new();
-            for sub_rule in sub {
-                match &**sub_rule {
-                    Literal(s) => modified_sub.push(Box::new(Literal(s.to_string()))),
-                    Reference(n) => {
-                        changed = true;
-                        modified_sub.push(Box::new(rules[*n].clone()))
-                    } /*match &rules[*n] {
-                        Literal(s) => {
-                            changed = true;
-                            modified_sub.push(Box::new(Literal(s.to_string())))
-                        },
-                        _ => modified_sub.push(Box::new(Reference(*n)))
-                    }*/
-                    Or(_) => modified_sub.push(Box::new(*sub_rule.clone())),
-                    _ => panic!("unexpected")
-                }
-            }
-            if changed {
-                Some(Concat(modified_sub))
-            } else {
-                None
-            }
-        },
-        Or(sub) => {
-            let mut changed = false;
-            let mut modified_sub = Vec::new();
-            for sub_rule in sub {
-                match simplify_rule(&*sub_rule, rules) {
-                    Some(modified) => {
-                        changed = true;
-                        modified_sub.push(Box::new(modified))
-                    },
-                    None => modified_sub.push(Box::new(*sub_rule.clone()))
-                }
-            }
-            if changed {Some(Or(modified_sub))} else {None}
-        }
-        _ => None
-    }
 }
 
 fn generate_possible_values(rule: &Rule, rules: &HashMap<usize, Rule>) -> HashSet<String> {
@@ -178,7 +91,7 @@ fn generate_possible_values(rule: &Rule, rules: &HashMap<usize, Rule>) -> HashSe
 
 impl Day for Day19 {
     fn part1(&self, input: &str) -> String {
-        let (mut rules, messages) = parse_input(input);
+        let (rules, messages) = parse_input(input);
         let possible = generate_possible_values(&rules.get(&0usize).unwrap(), &rules);
 
         let valid = messages.iter()
@@ -190,8 +103,52 @@ impl Day for Day19 {
     }
 
     fn part2(&self, input: &str) -> String {
+        let (rules, messages) = parse_input(input);
+        let possible_42 = generate_possible_values(rules.get(&42).unwrap(), &rules);
+        let possible_31 = generate_possible_values(rules.get(&31).unwrap(), &rules);
 
-        String::new()
+        // checking assumption that all possible values for rule 42 and rule 31 are the same length
+        assert_eq!(possible_42.iter().map(|s| s.len()).min().unwrap(), possible_42.iter().map(|s| s.len()).max().unwrap());
+        assert_eq!(possible_31.iter().map(|s| s.len()).min().unwrap(), possible_31.iter().map(|s| s.len()).max().unwrap());
+        assert_eq!(possible_31.iter().map(|s| s.len()).min().unwrap(), possible_42.iter().map(|s| s.len()).max().unwrap());
+
+        let chunk_size = possible_42.iter().map(|s| s.len()).min().unwrap();
+
+        let mut valid = 0;
+        for message in messages.iter() {
+            if message.len() % chunk_size != 0 {
+                continue;
+            }
+
+            let chunk_count = message.len() / chunk_size;
+            let mut leading_42s = 0;
+            for i in 0..chunk_count {
+                if possible_42.contains(&message[i*chunk_size..(i+1)*chunk_size]) {
+                    leading_42s += 1;
+                } else {
+                    break;
+                }
+            }
+
+            let mut trailing_31s = 0;
+            for i in 0..chunk_count {
+                if possible_31.contains(&message[(chunk_count - i - 1)*chunk_size..(chunk_count - i)*chunk_size]) {
+                    trailing_31s += 1;
+                } else {
+                    break;
+                }
+            }
+
+            for prefix in 1..chunk_count {
+                let suffix = chunk_count - prefix;
+                if (suffix % 2 == 0) && (leading_42s >= prefix + suffix / 2) && (trailing_31s >= suffix / 2) {
+                    valid += 1;
+                    break;
+                }
+            }
+        }
+
+        valid.to_string()
     }
 }
 
@@ -217,6 +174,52 @@ aaaabbb"), "2");
 
     #[test]
     fn part2_test1() {
-        assert_eq!(Day19{}.part2(""), "");
+        assert_eq!(Day19{}.part2("42: 9 14 | 10 1
+9: 14 27 | 1 26
+10: 23 14 | 28 1
+1: \"a\"
+11: 42 31
+5: 1 14 | 15 1
+19: 14 1 | 14 14
+12: 24 14 | 19 1
+16: 15 1 | 14 14
+31: 14 17 | 1 13
+6: 14 14 | 1 14
+2: 1 24 | 14 4
+0: 8 11
+13: 14 3 | 1 12
+15: 1 | 14
+17: 14 2 | 1 7
+23: 25 1 | 22 14
+28: 16 1
+4: 1 1
+20: 14 14 | 1 15
+3: 5 14 | 16 1
+27: 1 6 | 14 18
+14: \"b\"
+21: 14 1 | 1 14
+25: 1 1 | 1 14
+22: 14 14
+8: 42
+26: 14 22 | 1 20
+18: 15 15
+7: 14 5 | 1 21
+24: 14 1
+
+abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa
+bbabbbbaabaabba
+babbbbaabbbbbabbbbbbaabaaabaaa
+aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+bbbbbbbaaaabbbbaaabbabaaa
+bbbababbbbaaaaaaaabbababaaababaabab
+ababaaaaaabaaab
+ababaaaaabbbaba
+baabbaaaabbaaaababbaababb
+abbbbabbbbaaaababbbbbbaaaababb
+aaaaabbaabaaaaababaa
+aaaabbaaaabbaaa
+aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+babaaabbbaaabaababbaabababaaab
+aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba"), "12");
     }
 }
