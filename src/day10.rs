@@ -35,7 +35,7 @@ impl Day for Day10 {
                     2 => 2,
                     1 => 1,
                     0 => 1,
-                    n => panic!(format!("unhandled case {}", n))
+                    n => panic!("unhandled case {}", n)
                 };
                 since_diff_3 = 0;
             } else {

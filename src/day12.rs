@@ -23,7 +23,7 @@ fn parse_instruction(s:&str) -> Instruction {
         'L' => L(s.as_str().parse().unwrap()),
         'R' => R(s.as_str().parse().unwrap()),
         'F' => F(s.as_str().parse().unwrap()),
-        i => panic!(format!("unrecognized instruction {}", i))
+        i => panic!("unrecognized instruction {}", i)
     }
 }
 
@@ -51,7 +51,7 @@ impl Position {
                 90 => self.east += n,
                 180 => self.north -= n,
                 270 => self.east -= n,
-                h => panic!(format!("heading not aligned to grid {}", h))
+                h => panic!("heading not aligned to grid {}", h)
             }
         }
     }
@@ -99,7 +99,7 @@ impl PositionWithWaypoint {
                     self.waypoint_east = new_east;
                     self.waypoint_north = new_north
                 },
-                n => panic!(format!("Complicated rotate {}", n))
+                n => panic!("Complicated rotate {}", n)
             },
             R(n) => match n {
                 0 => (),
@@ -121,7 +121,7 @@ impl PositionWithWaypoint {
                     self.waypoint_east = new_east;
                     self.waypoint_north = new_north
                 },
-                n => panic!(format!("Complicated rotate {}", n))
+                n => panic!("Complicated rotate {}", n)
             },
             F(n) => {
                 self.north += self.waypoint_north * n;
