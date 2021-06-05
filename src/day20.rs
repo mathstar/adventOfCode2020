@@ -27,6 +27,7 @@ impl Tile {
         }
     }
 
+    #[allow(dead_code)]
     fn pretty_print(&self) -> String {
         self.pixels.iter().map(|v| v.iter().collect::<String>() + "\n").collect()
     }
@@ -291,7 +292,7 @@ impl Day for Day20 {
 
         let mut tiles_placed = 1;
         while tiles_placed < tiles.len() {
-            let mut last_tile = current_row.last();
+            let last_tile = current_row.last();
             match last_tile {
                 Some(last_tile) => {
                     match edge_map.get(&last_tile.right_edge_id()).unwrap().iter().find(|t| t.id != last_tile.id) {
@@ -340,12 +341,79 @@ impl Day for Day20 {
         //println!("{}", arranged_tiles.iter().map(|r| r.iter().map(|t| t.pretty_print() + "\n").collect::<String>() + "\n*******\n").collect::<String>());
 
         // stitch tiles into single tile
+        let mut pixels = Vec::new();
+        let tile_width = arranged_tiles[0][0].pixels[0].len();
+        let tile_height = arranged_tiles[0][0].pixels.len();
+        let num_tiles_horizontally = arranged_tiles[0].len();
+        let num_tiles_vertically = arranged_tiles.len();
+        for i in 0..num_tiles_vertically * tile_height {
+            let row_tile_index = i / tile_height;
+            let row_pixel_index = i % tile_height;
+            if row_pixel_index == 0 || row_pixel_index == tile_height - 1 {
+                // on a boundary row, skip
+                continue;
+            }
+            let mut current_row = Vec::new();
+            for j in 0..num_tiles_horizontally * tile_width {
+                let col_tile_index = j / tile_width;
+                let col_pixel_index = j % tile_width;
+                if col_pixel_index == 0 || col_pixel_index == tile_width - 1 {
+                    // on a boundary column, skip
+                    continue;
+                }
+                current_row.push(arranged_tiles[row_tile_index][col_tile_index].pixels[row_pixel_index][col_pixel_index])
+            }
+            pixels.push(current_row);
+        }
+        let mut stitched = Tile::new(0, pixels);
+        //println!("{}", stitched.pretty_print());
 
         // iterate through orientations to find sea monster
+        let sea_monster : Vec<Vec<char>> = vec![
+            vec![' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#', ' '],
+            vec!['#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', '#', '#', '#'],
+            vec![' ', '#', ' ', ' ', '#', ' ', ' ', '#', ' ', ' ', '#', ' ', ' ', '#', ' ', ' ', '#', ' ', ' ', ' ']
+        ];
+
+        let mut sea_monster_count = 0;
+        for flips in 0..2 {
+            if flips > 0 {
+                stitched.flip_horizontally();
+            }
+            for rotates in 0..4 {
+                if rotates > 0 {
+                    stitched.rotate_clockwise();
+                }
+                for i in 0..stitched.pixels.len() - 2 {
+                    for j in 0..stitched.pixels[0].len() - 19 {
+                        let mut valid = true;
+                        for x in 0..sea_monster.len() {
+                            for y in 0..sea_monster[0].len() {
+                                if sea_monster[x][y] != ' ' && sea_monster[x][y] != stitched.pixels[i + x][j + y] {
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                            if !valid {
+                                break;
+                            }
+                        }
+                        if valid {
+                            sea_monster_count += 1;
+                        }
+                    }
+                }
+                if sea_monster_count > 0 {
+                    break;
+                }
+            }
+            if sea_monster_count > 0 {
+                break;
+            }
+        }
 
         // count rough ocean pixels
-
-        String::new()
+        (stitched.pixels.iter().flat_map(|v| v.iter()).filter(|c| **c == '#').count() - sea_monster.iter().flat_map(|v| v.iter()).filter(|c| **c == '#').count() * sea_monster_count).to_string()
     }
 }
 
@@ -574,28 +642,4 @@ Tile 3079:
 ..#.......
 ..#.###..."), "273");
     }
-
-    // #[test]
-    // fn rotate_clockwise_test() {
-    //     let mut tile = Tile::new(0, vec![vec!['#', '0', '0', '0'],
-    //                                                    vec!['#', '0', '0', '#'],
-    //                                                    vec!['0', '0', '0', '0'],
-    //                                                    vec!['#', '0', '#', '0']]);
-    //     let left_id = tile.left_edge_id();
-    //     let right_id = tile.right_edge_id();
-    //     let top_id = tile.top_edge_id();
-    //     let bottom_id = tile.bottom_edge_id();
-    //
-    //     tile.rotate_clockwise();
-    //
-    //     println!("{}", tile.pixels.iter()
-    //         .map(|r| r.iter()
-    //             .map(|c| *c)
-    //             .fold("".to_owned(), |acc, a| acc + &a.to_string()).to_owned() + "\n")
-    //         .fold("".to_owned(), |acc, a| acc + &a.to_string()));
-    //     assert!(left_id.eq(&tile.top_edge_id()));
-    //     assert!(top_id.eq(&tile.right_edge_id()));
-    //     assert!(right_id.eq(&tile.bottom_edge_id()));
-    //     assert!(bottom_id.eq(&tile.left_edge_id()));
-    // }
 }
