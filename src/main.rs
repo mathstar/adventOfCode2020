@@ -21,6 +21,7 @@ mod day19;
 mod day20;
 mod day21;
 mod day22;
+mod day23;
 
 use simple_logger::SimpleLogger;
 use std::fs;
@@ -58,6 +59,7 @@ fn main() {
     days.insert("20", Box::new(day20::Day20{}));
     days.insert("21", Box::new(day21::Day21{}));
     days.insert("22", Box::new(day22::Day22{}));
+    days.insert("23", Box::new(day23::Day23{move_count: 100}));
 
     let trimmed_day = day.trim();
     match days.get(trimmed_day) {
