@@ -24,47 +24,32 @@ impl Day for Day13 {
     fn part2(&self, input: &str) -> String {
         let mut lines = input.lines();
         lines.next().unwrap();
-        let buses = lines
+        let mut buses = lines
             .next()
             .unwrap()
             .split(",")
             .map(|b| b.parse())
             .enumerate()
             .filter(|(_,b)| b.is_ok())
-            .map(|(i,b)| (i,b.unwrap()))
-            .collect::<Vec<(usize,i64)>>();
+            .map(|(i,b)| (i as i64,b.unwrap()))
+            .collect::<Vec<(i64,i64)>>();
 
-        let mut current_bus = 0;
-        let mut start = 0;
-        while current_bus < buses.len() {
-            let target_remainder = buses[current_bus].0 as i64;
-            let frequency = buses[current_bus].1;
-            if (start + target_remainder) % frequency == 0 {
-                current_bus += 1;
-            } else {
-                let mut step = (frequency - (start % frequency)) - target_remainder;
-                while step < 0 {step += frequency;}
-                start = start + step;
-                current_bus = 0;
+        // sieve in order of highest bus number (modulus)
+        buses.sort_by(|(_,a), (_,b)| b.cmp(a));
+
+        // use sieve-based approach
+        let mut time = buses[0].1 - buses[0].0;
+        let mut aggregate_modulus = buses[0].1;
+        for &(inc, bus) in buses.iter().skip(1) {
+            while (time + inc) % bus != 0 {
+                time += aggregate_modulus;
             }
+            aggregate_modulus *= bus;
         }
 
-        start.to_string()
+        time.to_string()
     }
 }
-
-// fn find_align_time(buses:&Vec<(usize, u64)>, start:u64) -> u64 {
-//     if buses.len() == 1 {
-//         let target_remainder = buses[0].0 as u64;
-//         let frequency = buses[0].1;
-//         start + (target_remainder - start % frequency)
-//     } else {
-//         let target_remainder = buses[buses.len() - 1].0 as u64;
-//         let frequency = buses[buses.len() - 1].1;
-//
-//     }
-//     0
-// }
 
 #[cfg(test)]
 mod tests {
